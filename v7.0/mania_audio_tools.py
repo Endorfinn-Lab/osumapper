@@ -4,15 +4,30 @@
 # For osu! file reading and analysis
 #
 
-import librosa;
+# Standard library imports
 import re, os, subprocess, json;
+import warnings; # Moved up to group with standard library imports
+
+# Moved warnings.filterwarnings to be right after importing warnings
+# It will always fail. Soundfile doesn't support mp3
+warnings.filterwarnings("ignore", message="PySoundFile failed. Trying audioread instead.");
+
+# Third-party library imports
 import numpy as np;
+
+# NumPy monkey patch
+# Addresses AttributeError: module 'numpy' has no attribute 'complex'.
+# This occurs with NumPy 1.24+ where np.complex (an alias for Python's built-in complex type) was removed.
+# The patch restores np.complex for compatibility with libraries or older code that might still use it.
+if not hasattr(np, 'complex'):
+    np.complex = complex
+
+import librosa; # Must be imported after numpy and the patch, in case it uses np.complex
+
+# Local application/library specific imports
 from os_tools import *;
 from mania_analyze import *;
 
-# It will always fail. Soundfile doesn't support mp3
-import warnings;
-warnings.filterwarnings("ignore", message="PySoundFile failed. Trying audioread instead.");
 
 workingdir = os.path.dirname(os.path.abspath(__file__));
 os.chdir(workingdir);
@@ -52,8 +67,8 @@ def get_freqs(sig, fft_size):
     """
     Lf = np.fft.fft(sig, fft_size);
     Lc = Lf[0:fft_size//2];
-    La = np.abs(Lc[0:fft_size//2]);
-    Lg = np.angle(Lc[0:fft_size//2]);
+    La = np.abs(Lc[0:fft_size//2]); # Could be np.abs(Lc);
+    Lg = np.angle(Lc[0:fft_size//2]); # Could be np.angle(Lc);
     return La, Lg;
 
 def slice_wave_at(ms, sig, samplerate, size):
