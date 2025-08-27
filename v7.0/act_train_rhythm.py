@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
-
-#
-# Part 2 action script
-#
-
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 import matplotlib.pyplot as plt
 import os, re
+
+# Impor Model dari Keras
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Conv2D, MaxPool2D, Activation, Dropout, Flatten, LSTM, Dense, TimeDistributed, concatenate
 
 root = "mapdata/";
 
@@ -17,12 +15,6 @@ divisor = 4;
 
 # this is a global variable!
 time_interval = 16;
-
-# lst file, [TICK, TIME, NOTE, IS_CIRCLE, IS_SLIDER, IS_SPINNER, IS_NOTE_END, UNUSED,
-#               0,    1,    2,         3,         4,          5,           6,      7,
-#            SLIDING, SPINNING, MOMENTUM, EX1, EX2, EX3], length MAPTICKS
-#                  8,        9,       10,  11,  12,  13,
-# wav file, [len(snapsize), MAPTICKS, 2, fft_size//4]
 
 try: # Idk if it works
     os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = "true"
@@ -54,21 +46,14 @@ def read_npz_list():
     return npz_list;
 
 def prefilter_data(train_data_unfiltered, div_data_unfiltered, train_labels_unfiltered):
-    # Filter out slider ends from the training set, since we cannot reliably decide if a slider end is on a note.
-    # Another way is to set 0.5 for is_note value, but that will break the validation algorithm.
-    # Also remove the IS_SLIDER_END, IS_SPINNER_END columns which are left to be zeros.
-
-    # Before: IS_NOTE_START, IS_CIRCLE, IS_SLIDER, IS_SPINNER, IS_NOTE_END, UNUSED, SLIDING, SPINNING
-    #                     0,         1,         2,          3,           4,      5,       6,        7
-    # After:  IS_NOTE_START, IS_CIRCLE, IS_SLIDER, IS_SPINNER, IS_NOTE_END, UNUSED
-    #                     0,         1,         2,          3,           4,      5
 
     non_object_end_indices = [i for i,k in enumerate(train_labels_unfiltered) if True or k[4] == -1 and k[5] == -1];
     train_data = train_data_unfiltered[non_object_end_indices];
     div_data = div_data_unfiltered[non_object_end_indices];
+    # Memilih kolom yang relevan
     train_labels = train_labels_unfiltered[non_object_end_indices][:, [0, 1, 2, 3, 4]];
 
-    # should be (X, 7, 32, 2) and (X, 6) in default sampling settings
+    # should be (X, 7, 32, 2) and (X, 5) in default sampling settings
     # (X, fft_window_type, freq_point, magnitude/phase)
     return train_data, div_data, train_labels;
 
@@ -90,10 +75,6 @@ def get_data_shape():
         if file.endswith(".npz"):
             train_data_unfiltered, div_data_unfiltered, train_labels_unfiltered = read_npz(os.path.join(root, file));
             train_data, div_data, train_labels = prefilter_data(train_data_unfiltered, div_data_unfiltered, train_labels_unfiltered);
-            # should be (X, 7, 32, 2) and (X, 6) in default sampling settings
-            # (X, fft_window_type, freq_point, magnitude/phase)
-            # X = 76255
-            # print(train_data.shape, train_labels.shape);
             if train_data.shape[0] == 0:
                 continue;
             return train_data.shape, div_data.shape, train_labels.shape;
@@ -122,11 +103,7 @@ def read_some_npzs_and_preprocess(npz_list):
     return train_data2, div_data2, train_labels2;
 
 def train_test_split(train_data2, div_data2, train_labels2, test_split_count=233):
-    """
-    Split data into train and test.
-    Note that there is no randomization. It doesn't really matter here, but in other machine learning it's obligatory.
-    Requires at least 233 rows of data or it will throw an error. (Tick count/10, around 1.5-2 full length maps)
-    """
+
     new_train_data = train_data2[:-test_split_count];
     new_div_data = div_data2[:-test_split_count];
     new_train_labels = train_labels2[:-test_split_count];
@@ -135,10 +112,8 @@ def train_test_split(train_data2, div_data2, train_labels2, test_split_count=233
     test_labels = train_labels2[-test_split_count:];
     return (new_train_data, new_div_data, new_train_labels), (test_data, test_div_data, test_labels);
 
-# (train_data_unfiltered, div_data_unfiltered, train_labels_unfiltered) = read_all_npzs();
-
-
 def set_param_fallback(PARAMS):
+    global divisor
     try:
         divisor = PARAMS["divisor"];
     except:
@@ -159,53 +134,45 @@ def set_param_fallback(PARAMS):
 
 # Build the model
 
-from tensorflow.keras.models import Model;
-
 def build_model():
-    """
-    Build the model.
-    Two inputs for wav_data and div_data (metadata) respectively.
-    Hyperparameters in the middle are tuned to make sure it runs smoothly on my machine.
-    You can try changing them in the middle if it achieves better result.
-    """
-    train_shape, div_shape, label_shape = get_data_shape();
-    model1 = keras.Sequential([
-        keras.layers.TimeDistributed(keras.layers.Conv2D(16, (2, 2),
-                           data_format='channels_last'),
-                           input_shape=(time_interval, train_shape[1], train_shape[2], train_shape[3])),
-        keras.layers.TimeDistributed(keras.layers.MaxPool2D((1, 2),
-                           data_format='channels_last')),
-        keras.layers.TimeDistributed(keras.layers.Activation(activation=tf.nn.relu)),
-        keras.layers.TimeDistributed(keras.layers.Dropout(0.3)),
-        keras.layers.TimeDistributed(keras.layers.Conv2D(16, (2, 3),
-                           data_format='channels_last')),
-        keras.layers.TimeDistributed(keras.layers.MaxPool2D((1, 2),
-                           data_format='channels_last')),
-        keras.layers.TimeDistributed(keras.layers.Activation(activation=tf.nn.relu)),
-        keras.layers.TimeDistributed(keras.layers.Dropout(0.3)),
-        keras.layers.TimeDistributed(keras.layers.Flatten()),
-        keras.layers.LSTM(64, activation=tf.nn.tanh, return_sequences=True)
-    ])
 
-    input2 = keras.layers.InputLayer(input_shape=(time_interval, div_shape[1]));
+    train_shape, div_shape, label_shape = get_data_shape()
 
-    conc = keras.layers.concatenate([model1.output, input2.output]);
-    dense1 = keras.layers.Dense(71, activation=tf.nn.tanh)(conc);
-    dense2 = keras.layers.Dense(71, activation=tf.nn.relu)(dense1);
-    dense3 = keras.layers.Dense(label_shape[1], activation=tf.nn.tanh)(dense2);
+    # Input 1: untuk data audio (waveform)
+    wav_input = Input(shape=(time_interval, train_shape[1], train_shape[2], train_shape[3]), name='wav_input')
 
+    # Branch 1: Lapisan Convolutional dan LSTM
+    x1 = TimeDistributed(Conv2D(16, (2, 2), data_format='channels_last'))(wav_input)
+    x1 = TimeDistributed(MaxPool2D((1, 2), data_format='channels_last'))(x1)
+    x1 = TimeDistributed(Activation(tf.nn.relu))(x1)
+    x1 = TimeDistributed(Dropout(0.3))(x1)
+    x1 = TimeDistributed(Conv2D(16, (2, 3), data_format='channels_last'))(x1)
+    x1 = TimeDistributed(MaxPool2D((1, 2), data_format='channels_last'))(x1)
+    x1 = TimeDistributed(Activation(tf.nn.relu))(x1)
+    x1 = TimeDistributed(Dropout(0.3))(x1)
+    x1 = TimeDistributed(Flatten())(x1)
+    lstm_out = LSTM(64, activation=tf.nn.tanh, return_sequences=True)(x1)
 
-    # I think the first is correct but whatever...
-    try:
-        optimizer = tf.optimizers.RMSprop(0.001) #Adamoptimizer?
-    except:
-        optimizer = tf.train.RMSPropOptimizer(0.001) #Adamoptimizer?
+    # Input 2: untuk data divisor/metadata
+    div_input = Input(shape=(time_interval, div_shape[1]), name='div_input')
 
+    # Menggabungkan output dari branch LSTM dan input metadata
+    conc = concatenate([lstm_out, div_input])
+    
+    # Lapisan Dense setelah penggabungan
+    dense1 = Dense(71, activation=tf.nn.tanh)(conc)
+    dense2 = Dense(71, activation=tf.nn.relu)(dense1)
+    final_output = Dense(label_shape[1], activation=tf.nn.tanh)(dense2)
 
-    final_model = Model(inputs=[model1.input, input2.input], outputs=dense3);
+    # Optimizer
+    # Gunakan tf.keras.optimizers karena tf.train adalah API lama dari TF1
+    optimizer = tf.keras.optimizers.RMSprop(0.001)
+
+    # Membuat dan meng-compile model final
+    final_model = Model(inputs=[wav_input, div_input], outputs=final_output)
     final_model.compile(loss='mse',
-                optimizer=optimizer,
-                metrics=[keras.metrics.mae])
+                        optimizer=optimizer,
+                        metrics=[keras.metrics.mae])
     return final_model
 
 
@@ -231,8 +198,8 @@ class PrintDot(keras.callbacks.Callback):
         print('.', end='')
 
 def step2_build_model():
-    model_v7 = build_model();
-    return model_v7;
+    model_v7 = build_model()
+    return model_v7
 
 
 def step2_train_model(model, PARAMS):
@@ -269,6 +236,7 @@ def step2_train_model(model, PARAMS):
             plot_history(history)
     else: # too much data! read it every turn.
         for epoch in range(EPOCHS):
+            print(f"Epoch {epoch+1}/{EPOCHS}")
             for map_batch in range(np.ceil(len(train_file_list) / data_split_count).astype(int)): # hmmmmm
                 if map_batch == 0:
                     train_data2, div_data2, train_labels2 = read_some_npzs_and_preprocess(train_file_list[map_batch * data_split_count : (map_batch+1) * data_split_count]);
@@ -277,29 +245,31 @@ def step2_train_model(model, PARAMS):
                     new_train_data, new_div_data, new_train_labels = read_some_npzs_and_preprocess(train_file_list[map_batch * data_split_count : (map_batch+1) * data_split_count]);
 
                 history = model.fit([new_train_data, new_div_data], new_train_labels, epochs=1,
-                                    validation_split=0.2, verbose=0, batch_size=batch_size,
+                                    validation_data=([test_data, test_div_data], test_labels), # Use consistent validation set
+                                    verbose=0, batch_size=batch_size,
                                     callbacks=[])
                 # Manually print the dot
                 print('.', end='');
             print('');
     return model;
 
-# [loss, mae] = model.evaluate([test_data, test_div_data], test_labels, verbose=0)
-
 # Accuracy
 from sklearn.metrics import roc_auc_score;
 
 def step2_evaluate(model):
-    """
-    Evaluate model using AUC score.
-    Previously I used F1 but I think AUC is more appropriate for this type of data.
 
-    High value (close to 1.00) doesn't always mean it's better. Usually it means you put identical maps in the training set.
-    It shouldn't be possible to reach very high accuracy since that will mean that music 100% dictates map rhythm.
-    """
+    try:
+        # Periksa apakah data tes sudah didefinisikan
+        if 'test_data' not in globals() or test_data.size == 0:
+            print("Test data not available for evaluation. Please run training first.")
+            return
+    except NameError:
+        print("Test data not available for evaluation. Please run training first.")
+        return
+        
     train_shape, div_shape, label_shape = get_data_shape();
 
-    test_predictions = model.predict([test_data, test_div_data]).reshape((-1, time_interval, label_shape[1]))
+    test_predictions = model.predict([test_data, test_div_data])
 
     flat_test_preds = test_predictions.reshape(-1, label_shape[1]);
     flat_test_labels = test_labels.reshape(-1, label_shape[1]);
@@ -310,6 +280,11 @@ def step2_evaluate(model):
     # Individual column predictions
     column_names = ["is_note_start", "is_circle", "is_slider", "is_spinner", "is_note_end"];
     for i, k in enumerate(column_names):
+        # Periksa apakah ada sampel positif dan negatif di label aktual
+        if len(np.unique(actual_result[:, i])) < 2:
+            print(f"Skipping AUC for '{k}': only one class present in y_true.")
+            continue
+        
         if i == 3: # No one uses spinners anyways
             continue;
         if i == 2 and np.sum(actual_result[:, i]) == 0: # No sliders (Taiko)
@@ -320,8 +295,8 @@ def step2_evaluate(model):
 def step2_save(model):
     tf.keras.models.save_model(
         model,
-        "saved_rhythm_model",
+        "saved_rhythm_model.h5", # Conventionally use .h5 or .keras extension
         overwrite=True,
-        include_optimizer=True,
-        save_format="h5"
+        include_optimizer=True
     );
+    print("\nModel saved as saved_rhythm_model.h5")
