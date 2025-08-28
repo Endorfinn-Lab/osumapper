@@ -2,15 +2,9 @@
 
 An automatic beatmap generator using Tensorflow / Deep Learning.
 
-Demo map 1 (low BPM): https://osu.ppy.sh/beatmapsets/1290030
+Thank you to [Kotritrona](https://github.com/kotritrona) who created this amazing project. As an admirer of this project and a player, I will strive to continue this project so that it keeps running well.
 
-Demo map 2 (high BPM): https://osu.ppy.sh/beatmapsets/1290026
-
-## Colaboratory
-
-https://colab.research.google.com/github/kotritrona/osumapper/blob/master/v7.0/Colab.ipynb
-
-For mania mode: [mania_Colab.ipynb](https://colab.research.google.com/github/kotritrona/osumapper/blob/master/v7.0/mania_Colab.ipynb)
+The project I am continuing will focus on the osu!mania mode, as I only play that mode myself. I hope this project can help in creating beatmaps for reference or to realize your dream beatmaps.
 
 ## Complete guide for a newcomer in osu! mapping
 
@@ -18,18 +12,17 @@ https://github.com/kotritrona/osumapper/wiki/Complete-guide:-creating-beatmap-us
 
 ## Installation & Model Running
 
-- Refer to https://github.com/kotritrona/osumapper/tree/master/v6.2 for version 6.2
-- Refer to https://github.com/kotritrona/osumapper/tree/master/v7.0 for version 7.0
+- Refer to https://github.com/endorfinn-lab/osumapper/tree/master/v7.0 for edited version 7.0
 
 ## Important tip for model training
 
 Don't train with every single map in your osu!. That's not how machine learning works!
 
-I would suggest you select only maps you think are well made, for instance a mapset that contains all 5.0 ~ 6.5☆ maps mapped by (insert mapper name).
+Kotritrona suggest you select only maps you think are well made, for instance a mapset that contains all 5.0 ~ 6.5☆ maps mapped by (insert mapper name).
 
 ## Maplist.txt creation:
-- I have made a maplist generator under `v7.0/` folder. Run `node gen_maplist.js` under the directory to start.
-- the other way to create a maplist.txt file to train the model is by using the maplist creator.py script (found in v6.2 folder). running this should overwrite the maplist.txt in the folder with a new one using the maps from the collection folder you have specified.
+- Kotritrona have made a maplist generator under `v7.0/` folder. Run `node gen_maplist.js` under the directory to start.
+- The way gen_maplist works has changed; instead of using osu!.db as a reference, the code will now scan the /osu!/songs folder.
 
 ## Model Specification
 [Structure diagram](osunn_structure.jpg)
