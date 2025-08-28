@@ -6,7 +6,7 @@ Thank you to [Kotritrona](https://github.com/kotritrona) who created this amazin
 
 The project I am continuing will focus on the osu!mania mode, as I only play that mode myself. I hope this project can help in creating beatmaps for reference or to realize your dream beatmaps.
 
-## Complete guide for a newcomer in osu! mapping
+## Complete guide for a newcomer in osumapper
 
 https://github.com/kotritrona/osumapper/wiki/Complete-guide:-creating-beatmap-using-osumapper
 
