@@ -10,6 +10,9 @@ The project I am continuing will focus on the osu!mania mode, as I only play tha
 
 https://github.com/kotritrona/osumapper/wiki/Complete-guide:-creating-beatmap-using-osumapper
 
+## Quick guide
+
+
 ## Installation & Model Running
 
 - Refer to https://github.com/endorfinn-lab/osumapper/tree/master/v7.0 for edited version 7.0
@@ -21,10 +24,12 @@ Don't train with every single map in your osu!. That's not how machine learning 
 Kotritrona suggest you select only maps you think are well made, for instance a mapset that contains all 5.0 ~ 6.5☆ maps mapped by (insert mapper name).
 
 ## Maplist.txt creation:
+
 - Kotritrona have made a maplist generator under `v7.0/` folder. Run `node gen_maplist.js` under the directory to start.
 - The way gen_maplist works has changed; instead of using osu!.db as a reference, the code will now scan the /osu!/songs folder.
 
 ## Model Specification
+
 [Structure diagram](osunn_structure.jpg)
 
 - Rhythm model
