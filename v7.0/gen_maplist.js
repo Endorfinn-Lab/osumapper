@@ -8,10 +8,19 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const opn = require('opn');
 const fs = require('fs');
+const path = require('path');
 
 async function main() {
     const osuPaths = await osuPathFinder();
-    const osuDB = osuDBGetter(osuPaths.db);
+
+    if (!osuPaths.songs || !fs.existsSync(osuPaths.songs)) {
+        console.error(`Could not find osu! Songs folder at "${osuPaths.songs}".`);
+        console.error("Please ensure the path is correct. You may be prompted to enter it manually.");
+        process.exit(1);
+    }
+
+    console.log("Starting to parse beatmaps, this may take a while...");
+    const osuDB = osuDBGetter(osuPaths.songs);
 
     let app = express();
     app.use("/beatmaps", function(req, res, next) {
@@ -34,7 +43,7 @@ async function main() {
         }
         res.end();
     });
-    app.use("/", express.static('maplist_maker/html'));
+    app.use("/", express.static(path.join(__dirname, 'maplist_maker/html')));
 
     app.use(function(req, res, next) {
         res.status(404);
@@ -43,8 +52,10 @@ async function main() {
     });
 
     app.listen(3424, function () {
-        opn("http://127.0.0.1:3424/");
-        console.log('Node server listening on port 3424!');
+        const url = "http://127.0.0.1:3424/";
+        opn(url);
+        console.log(`Node server listening on ${url}`);
+        console.log('Parsing complete. Application is ready.');
     });
 }
 main();
