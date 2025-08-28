@@ -2,6 +2,7 @@
 
 let regedit = require("regedit");
 const readline = require("readline");
+const path = require("path");
 
 async function findOsuPath() {
     try {
@@ -9,10 +10,11 @@ async function findOsuPath() {
             regedit.list('HKCR\\osu!\\shell\\open\\command', (e, r) => e ? rej(e) : res(r));
         });
         let osuExePath = result['HKCR\\osu!\\shell\\open\\command'].values[''].value.replace(/^["']/, "").replace(/['"]? ?"%1"/, "");
+        const rootPath = osuExePath.replace(/osu!\.exe$/, "");
         return {
             exe: osuExePath,
-            root: osuExePath.replace(/osu!\.exe$/, ""),
-            db: osuExePath.replace(/osu!\.exe$/, "osu!.db")
+            root: rootPath,
+            songs: path.join(rootPath, "Songs")
         };
     }
     catch(e) {
@@ -30,7 +32,7 @@ async function findOsuPath() {
                 res({
                     exe: p + "osu!.exe",
                     root: p,
-                    db: p + "osu!.db"
+                    songs: path.join(p, "Songs")
                 });
             });
         });
