@@ -57,7 +57,3 @@ Kotritrona suggest you select only maps you think are well made, for instance a 
   - trains 6 ~ 25 big epochs each group. mostly 6 epochs unless the generated map is out of the mapping region (0:512, 0:384).
 - Beatmap Converter
   - uses node.js to convert map data between JSON and .osu formats
-
-## Citing
-
-If you want to cite osumapper in a scholarly work, please cite the github page. I'm not going to write a paper for it.
