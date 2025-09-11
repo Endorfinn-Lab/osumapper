@@ -7,7 +7,7 @@ Thank you to [Kotritrona](https://github.com/kotritrona) who created this amazin
 The project I am continuing will focus on the osu!mania mode, as I only play that mode myself. I hope this project can help in creating beatmaps for reference or to realize your dream beatmaps.
 
 
-## Installation & Model Running
+## Osumapper Webui (mania only)
 
 Pre-requisite:
 - [Python](https://www.python.org/downloads/)
@@ -15,7 +15,7 @@ Pre-requisite:
 
 How to:
 - Install pre-requisite
-- Run launcher.bat
+- Run launcher.bat inside mania-v7.0
   
 
 ## Important tip for model training
