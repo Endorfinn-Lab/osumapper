@@ -10,8 +10,9 @@ The project I am continuing will focus on the osu!mania mode, as I only play tha
 
 https://github.com/kotritrona/osumapper/wiki/Complete-guide:-creating-beatmap-using-osumapper
 
-## Quick guide
+## osumapper webui
 
+Coming soon..
 
 ## Installation & Model Running
 
