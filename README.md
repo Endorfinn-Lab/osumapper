@@ -10,19 +10,6 @@ The project I am continuing will focus on the osu!mania mode, as I only play tha
 
 https://github.com/kotritrona/osumapper/wiki/Complete-guide:-creating-beatmap-using-osumapper
 
-## osumapper webui
-
-Pre-requisite:
-- [Python](https://www.python.org/downloads/)
-- [Node.js](https://nodejs.org/en/download/)
-
-How to:
-- Install python and node.js
-- Run launcher.bat
- 
-Demo:
-Coming soon..
-
 ## Installation & Model Running
 
 - Refer to https://github.com/endorfinn-lab/osumapper/tree/master/v7.0 for edited version 7.0
