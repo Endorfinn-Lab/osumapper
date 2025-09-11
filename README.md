@@ -12,6 +12,15 @@ https://github.com/kotritrona/osumapper/wiki/Complete-guide:-creating-beatmap-us
 
 ## osumapper webui
 
+Pre-requisite:
+- [Python](https://www.python.org/downloads/)
+- [Node.js](https://nodejs.org/en/download/)
+
+How to:
+- Install python and node.js
+- Run launcher.bat
+ 
+Demo:
 Coming soon..
 
 ## Installation & Model Running
