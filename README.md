@@ -5,17 +5,6 @@ An automatic beatmap generator using Tensorflow / Deep Learning.
 Thank you to [Kotritrona](https://github.com/kotritrona) who created this amazing project. As an admirer of this project and a player, I will strive to continue this project so that it keeps running well.
 
 The project I am continuing will focus on the osu!mania mode, as I only play that mode myself. I hope this project can help in creating beatmaps for reference or to realize your dream beatmaps.
-
-
-## Osumapper Webui (mania only)
-
-Pre-requisite:
-- [Python](https://www.python.org/downloads/)
-- [Node.js](https://nodejs.org/en/download/)
-
-How to:
-- Install pre-requisite
-- Run launcher.bat inside mania-v7.0
   
 
 ## Important tip for model training
