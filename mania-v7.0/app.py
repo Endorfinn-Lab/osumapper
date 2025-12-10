@@ -70,21 +70,21 @@ def run_maplist_maker_in_new_terminal():
 
 def handle_train_step1(current_log, progress=gr.Progress()):
     log = update_log(current_log, "### Step 1/3: Preparing Map Data")
-    yield log, gr.Button(interactive=False), gr.Button(interactive=False)
+    yield log, gr.update(interactive=False), gr.update(interactive=False)
     try:
         progress(0.5, desc="Preparing Map Data...")
         with capture_stdout() as captured:
             step1_load_maps()
         log = update_log(log, f"**Success!** Data preparation complete. You can run this step again to replace the files, or proceed to Step 2.\n```\n{captured.getvalue()}```")
-        yield log, gr.Button(interactive=True), gr.Button(interactive=True)
+        yield log, gr.update(interactive=True), gr.update(interactive=True)
     except Exception:
         error_details = traceback.format_exc()
         log = update_log(log, f"**Error:**\n```\n{error_details}```")
-        yield log, gr.Button(interactive=True), gr.Button(interactive=False)
+        yield log, gr.update(interactive=True), gr.update(interactive=False)
 
 def handle_train_step2(current_log, epochs, batch_size, plot_history, progress=gr.Progress()):
     log = update_log(current_log, "### Step 2/3: Training Rhythm Model")
-    yield log, gr.Button(interactive=False), gr.Button(interactive=False)
+    yield log, gr.update(interactive=False), gr.update(interactive=False)
     try:
         with capture_stdout() as captured:
             train_params = {
@@ -107,7 +107,7 @@ def handle_train_step2(current_log, epochs, batch_size, plot_history, progress=g
             step2_save(model)
         log = update_log(log, f"**Success!** Rhythm model training complete. You can run this step again to retrain and replace the model, or proceed to Step 3.\n```\n{captured.getvalue()}```")
         progress(1)
-        yield log, gr.Button(interactive=True), gr.Button(interactive=True)
+        yield log, gr.update(interactive=True), gr.update(interactive=True)
     except ValueError as ve:
         error_message_str = str(ve)
         user_friendly_error = f"**Error during model training:**\n\n_{error_message_str}_\n\n"
@@ -120,15 +120,15 @@ def handle_train_step2(current_log, epochs, batch_size, plot_history, progress=g
                 "**Please check recent code changes and ensure your map data is processed correctly.**"
             )
         log = update_log(log, user_friendly_error)
-        yield log, gr.Button(interactive=True), gr.Button(interactive=False)
+        yield log, gr.update(interactive=True), gr.update(interactive=False)
     except Exception:
         error_details = traceback.format_exc()
         log = update_log(log, f"**An unexpected error occurred:**\n```\n{error_details}```")
-        yield log, gr.Button(interactive=True), gr.Button(interactive=False)
+        yield log, gr.update(interactive=True), gr.update(interactive=False)
 
 def handle_train_step3(current_log, progress=gr.Progress()):
     log = update_log(current_log, "### Step 3/3: Creating Pattern Dataset")
-    yield log, gr.Button(interactive=False)
+    yield log, gr.update(interactive=False)
     try:
         progress(0.5, desc="Creating Pattern Dataset...")
         with capture_stdout() as captured:
@@ -137,18 +137,18 @@ def handle_train_step3(current_log, progress=gr.Progress()):
         log = update_log(log, f"**Success!** Pattern dataset creation complete. You can run this step again to replace the file.\n```\n{captured.getvalue()}```")
         log = update_log(log, "## All training steps completed successfully!")
         progress(1)
-        yield log, gr.Button(interactive=True)
+        yield log, gr.update(interactive=True)
     except Exception:
         error_details = traceback.format_exc()
         log = update_log(log, f"**Error:**\n```\n{error_details}```")
-        yield log, gr.Button(interactive=True)
+        yield log, gr.update(interactive=True)
 
 def reset_training_ui():
-    return "", gr.Button(interactive=True), gr.Button(interactive=False), gr.Button(interactive=False)
+    return "", gr.update(interactive=True), gr.update(interactive=False), gr.update(interactive=False)
 
 def handle_step1_click(current_log, osu_file_in, osu_audio_in, progress=gr.Progress()):
     log = update_log(current_log, "### Step 1: Preparing Input File")
-    yield log, gr.Button(interactive=False), gr.Button(interactive=False), gr.Button(interactive=False), gr.Button(interactive=False), None, None, None
+    yield log, gr.update(interactive=False), gr.update(interactive=False), gr.update(interactive=False), gr.update(interactive=False), None, None, None
 
     try:
         progress(0.5, desc="Preparing input file...")
@@ -175,7 +175,7 @@ def handle_step1_click(current_log, osu_file_in, osu_audio_in, progress=gr.Progr
             input_osu_path = "timing.osu"
             step4_read_new_map(input_osu_path)
         log = update_log(log, f"**Success!** Input files processed. You can now proceed to Step 2.\n```\n{captured.getvalue()}```")
-        yield log, gr.Button(interactive=True), gr.Button(interactive=True), gr.Button(interactive=False), gr.Button(interactive=False), desired_filename, None, None
+        yield log, gr.update(interactive=True), gr.update(interactive=True), gr.update(interactive=False), gr.update(interactive=False), desired_filename, None, None
     except FileNotFoundError:
         error_message = (
             "**FATAL ERROR: `ffmpeg` not found!**\n\n"
@@ -186,15 +186,15 @@ def handle_step1_click(current_log, osu_file_in, osu_audio_in, progress=gr.Progr
             "3. **Add to PATH:** You must add the `bin` folder from your FFmpeg installation (e.g., `C:\\ffmpeg\\bin`) to your Windows System PATH environment variables.\n"
             "4. **Restart:** Close this application and the terminal it's running in, then start it again."
         )
-        yield update_log(current_log, error_message), gr.Button(interactive=True), gr.Button(interactive=False), gr.Button(interactive=False), gr.Button(interactive=False), None, None, None
+        yield update_log(current_log, error_message), gr.update(interactive=True), gr.update(interactive=False), gr.update(interactive=False), gr.update(interactive=False), None, None, None
     except Exception:
         error_details = traceback.format_exc()
         log = update_log(log, f"**Error:**\n```\n{error_details}```")
-        yield log, gr.Button(interactive=True), gr.Button(interactive=False), gr.Button(interactive=False), gr.Button(interactive=False), None, None, None
+        yield log, gr.update(interactive=True), gr.update(interactive=False), gr.update(interactive=False), gr.update(interactive=False), None, None, None
 
 def handle_step2_click(current_log, note_density, hold_favor, divisor_favor_str, hold_max_ticks, hold_min_return, rotate_mode_str, progress=gr.Progress()):
     log = update_log(current_log, "### Step 2: Predicting Rhythm & Building Patterns")
-    yield log, gr.Button(interactive=False), gr.Button(interactive=False), gr.Button(interactive=False), None, None
+    yield log, gr.update(interactive=False), gr.update(interactive=False), gr.update(interactive=False), None, None
     
     try:
         progress(0, desc="Loading model and data...")
@@ -215,7 +215,7 @@ def handle_step2_click(current_log, note_density, hold_favor, divisor_favor_str,
             
         log = update_log(log, f"**Success!** Rhythm predicted and patterns built. You can now proceed to Step 3.\n```\n{captured.getvalue()}```")
         progress(1)
-        yield log, gr.Button(interactive=True), gr.Button(interactive=True), gr.Button(interactive=False), notes_each_key, None
+        yield log, gr.update(interactive=True), gr.update(interactive=True), gr.update(interactive=False), notes_each_key, None
 
     except ValueError as ve:
         error_message_str = str(ve)
@@ -237,15 +237,15 @@ def handle_step2_click(current_log, note_density, hold_favor, divisor_favor_str,
                 "Please try again with a different, valid audio file."
             )
         log = update_log(log, user_friendly_error)
-        yield log, gr.Button(interactive=True), gr.Button(interactive=False), gr.Button(interactive=False), None, None
+        yield log, gr.update(interactive=True), gr.update(interactive=False), gr.update(interactive=False), None, None
     except Exception:
         error_details = traceback.format_exc()
         log = update_log(log, f"**An unexpected error occurred:**\n```\n{error_details}```")
-        yield log, gr.Button(interactive=True), gr.Button(interactive=False), gr.Button(interactive=False), None, None
+        yield log, gr.update(interactive=True), gr.update(interactive=False), gr.update(interactive=False), None, None
 
 def handle_step3_click(current_log, notes_each_key_state, key_fix_str, progress=gr.Progress()):
     log = update_log(current_log, "### Step 3: Applying Mods")
-    yield log, gr.Button(interactive=False), gr.Button(interactive=False), None
+    yield log, gr.update(interactive=False), gr.update(interactive=False), None
 
     try:
         progress(0.5, desc="Applying mods...")
@@ -256,15 +256,15 @@ def handle_step3_click(current_log, notes_each_key_state, key_fix_str, progress=
             notes_each_key = mania_modding(notes_each_key_state, modding_params)
             notes, final_key_count = merge_objects_each_key(notes_each_key)
         log = update_log(log, f"**Success!** Mods applied and notes merged. You can now proceed to Step 4.\n```\n{captured.getvalue()}```")
-        yield log, gr.Button(interactive=True), gr.Button(interactive=True), (notes, final_key_count)
+        yield log, gr.update(interactive=True), gr.update(interactive=True), (notes, final_key_count)
     except Exception:
         error_details = traceback.format_exc()
         log = update_log(log, f"**Error:**\n```\n{error_details}```")
-        yield log, gr.Button(interactive=True), gr.Button(interactive=False), None
+        yield log, gr.update(interactive=True), gr.update(interactive=False), None
 
 def handle_step4_click(current_log, final_notes_state, desired_filename, progress=gr.Progress()):
     log = update_log(current_log, "### Step 4: Saving Final .osu File")
-    yield log, gr.Button(interactive=False), None
+    yield log, gr.update(interactive=False), None
     
     try:
         progress(0.5, desc="Saving .osu file...")
@@ -282,21 +282,21 @@ def handle_step4_click(current_log, final_notes_state, desired_filename, progres
                 final_filename = default_generated_name
 
         log = update_log(log, f"**Success!** Map saved as `{os.path.basename(final_filename)}`.\n\n## Generation Complete!")
-        yield log, gr.Button(interactive=True), final_filename
+        yield log, gr.update(interactive=True), final_filename
     except Exception:
         error_details = traceback.format_exc()
         log = update_log(log, f"**Error:**\n```\n{error_details}```")
-        yield log, gr.Button(interactive=True), None
+        yield log, gr.update(interactive=True), None
 
 def cleanup_and_reset():
     step8_clean_up()
     return (
         "", 
         None, None, None, None,
-        gr.Button(interactive=True),
-        gr.Button(interactive=False),
-        gr.Button(interactive=False),
-        gr.Button(interactive=False),
+        gr.update(interactive=True),
+        gr.update(interactive=False),
+        gr.update(interactive=False),
+        gr.update(interactive=False),
     )
 
 try:
