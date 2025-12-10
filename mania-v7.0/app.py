@@ -299,7 +299,15 @@ def cleanup_and_reset():
         gr.Button(interactive=False),
     )
 
-with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue", secondary_hue="sky"), title="Osumapper UI") as demo:
+try:
+    blocks_ctx = gr.Blocks(theme=gr.themes.Soft(primary_hue="blue", secondary_hue="sky"), title="Osumapper UI")
+except TypeError:
+    try:
+        blocks_ctx = gr.Blocks(title="Osumapper UI")
+    except Exception:
+        blocks_ctx = gr.Blocks()
+
+with blocks_ctx as demo:
     gr.Markdown("<h1>Osumapper UI</h1>")
     gr.Markdown("A user interface for the osumapper project. Create maplists, train models, and generate osu!mania charts.")
 
