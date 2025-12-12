@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-
-#
-# Step 6 action script
-#
-
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
@@ -11,23 +5,20 @@ import os, re, json
 
 divisor = 4;
 
-def read_npz(fn):
-    with np.load(fn) as data:
+def read_npz(fn, allow_pickle=True):
+    with np.load(fn, allow_pickle=allow_pickle) as data:
         wav_data = data["wav"];
         wav_data = np.swapaxes(wav_data, 2, 3);
         ticks = data["ticks"];
         timestamps = data["timestamps"];
         extra = data["extra"];
 
-        # Extra vars
         bpms = extra[0];
         slider_lengths = extra[1];
         ex1 = (60000 / bpms) / 500 - 1;
         ex2 = bpms / 120 - 1;
         ex3 = slider_lengths / 150 - 1;
 
-        # This might be confusing: "i" is the index of the tick, "k" is the tick count inside the uninherited timing section (red line)
-        # For most of the cases these are the same numbers, but for maps with multiple timing sections they're different
         div_data = np.array([divisor_array(k) + [ex1[i], ex2[i], ex3[i]] for i, k in enumerate(ticks)]);
     return wav_data, div_data, ticks, timestamps;
 
@@ -38,14 +29,11 @@ def divisor_array(k):
 def step5_set_params(note_density=0.24, hold_favor=0, divisor_favor=[0] * divisor, hold_max_ticks=8, hold_min_return=1, rotate_mode=4):
     return note_density, hold_favor, divisor_favor, hold_max_ticks, hold_min_return, rotate_mode;
 
-def step5_load_model(model_file="saved_rhythm_model.h5"): # DIUBAH: Tambahkan ekstensi .h5
-    # Fallback for local version
-    if not os.path.isfile(model_file) and model_file == "saved_rhythm_model.h5": # DIUBAH: Periksa file .h5
+def step5_load_model(model_file="saved_rhythm_model.h5"):
+    if not os.path.isfile(model_file) and model_file == "saved_rhythm_model.h5":
         print("Model not trained! Trying default model...")
-        # DIUBAH: Arahkan ke file model .h5, bukan direktori
-        model_file = "models/default/rhythm_model.h5" 
+        model_file = "models/default/rhythm_model.h5"
 
-    # Periksa lagi kalau fallback file tidak ada
     if not os.path.isfile(model_file):
         raise FileNotFoundError(f"Model file not found at {model_file}. Please train the model or provide a valid default model.")
 
@@ -54,7 +42,6 @@ def step5_load_model(model_file="saved_rhythm_model.h5"): # DIUBAH: Tambahkan ek
         custom_objects=None,
         compile=False
     );
-    # Gunakan tf.keras.optimizers karena tf.optimizers adalah alias lama
     optimizer = tf.keras.optimizers.RMSprop(0.001)
     model.compile(loss='mse',
                 optimizer=optimizer,
@@ -63,36 +50,35 @@ def step5_load_model(model_file="saved_rhythm_model.h5"): # DIUBAH: Tambahkan ek
 
 def step5_load_npz():
     fn = "mapthis.npz";
-    return read_npz(fn);
+    return read_npz(fn, allow_pickle=True);
 
 def step5_predict_notes(model, npz, params):
-    # Get npz data
     test_data, div_data, ticks, timestamps = npz;
     note_density, hold_favor, divisor_favor, hold_max_ticks, hold_min_return, rotate_mode = params;
 
-    # Make time intervals from test data
     time_interval = 16;
     if test_data.shape[0] % time_interval > 0:
         test_data = test_data[:-(test_data.shape[0]%time_interval)];
         div_data = div_data[:-(div_data.shape[0]%time_interval)];
+        
+    if test_data.shape[0] == 0:
+        raise ValueError("Input audio processing resulted in no data. The audio file might be too short or silent.")
+
     test_data2 = np.reshape(test_data, (-1, time_interval, test_data.shape[1], test_data.shape[2], test_data.shape[3]))
     div_data2 = np.reshape(div_data, (-1, time_interval, div_data.shape[1]))
 
     test_predictions = model.predict([test_data2, div_data2]);
     preds = test_predictions.reshape(-1, test_predictions.shape[2]);
 
-    # Favor sliders a little
     preds[:, 2] += hold_favor;
     divs = div_data2.reshape(-1, div_data2.shape[2]);
-    margin = np.sum([divisor_favor[k] * divs[:, k] for k in range(0, divisor)], axis=0); # DIUBAH: tambahkan axis=0
+    margin = np.sum([divisor_favor[k] * divs[:, k] for k in range(0, divisor)], axis=0);
 
     preds[:, 0] += margin;
 
-    # Predict is_obj using note_density
     obj_preds = preds[:, 0];
     target_count = np.round(note_density * obj_preds.shape[0]).astype(int);
-    
-    # Hindari error jika target_count lebih besar dari jumlah elemen
+
     if target_count >= len(obj_preds):
         target_count = len(obj_preds) - 1
     if target_count < 0:
@@ -102,14 +88,13 @@ def step5_predict_notes(model, npz, params):
     is_obj_pred = np.expand_dims(np.where(preds[:, 0] >= borderline, 1, 0), axis=1);
 
     obj_type_pred = np.equal(preds[:, 1:4], np.max(preds[:, 1:4], axis=1, keepdims=True)).astype(int)
-    others_pred = (1 + np.sign(preds[:, 4:] + 0.5)) / 2; # DIUBAH: Menghapus referensi ke shape prediksi
+    others_pred = (1 + np.sign(preds[:, 4:])) / 2;
     another_pred_result = np.concatenate([is_obj_pred, is_obj_pred * obj_type_pred, others_pred], axis=1);
 
     print("{} notes predicted.".format(np.sum(is_obj_pred)));
 
     return is_obj_pred, another_pred_result, timestamps, ticks, div_data;
 
-# Sisa dari file tetap sama
 def read_key_count_from_json(file = "mapthis.json"):
     with open(file, encoding="utf-8") as map_json:
         map_dict = json.load(map_json)
