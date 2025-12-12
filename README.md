@@ -5,12 +5,11 @@ An automatic beatmap generator using Tensorflow / Deep Learning.
 Thank you to [Kotritrona](https://github.com/kotritrona) who created this amazing project. As an admirer of this project and a player, I will strive to continue this project so that it keeps running well.
 
 The project I am continuing will focus on the osu!mania mode, as I only play that mode myself. I hope this project can help in creating beatmaps for reference or to realize your dream beatmaps.
-  
+
 
 ## Important tip for model training
 
 Don't train with every single map in your osu!. That's not how machine learning works!
-
 Kotritrona suggest you select only maps you think are well made, for instance a mapset that contains all 5.0 ~ 6.5☆ maps mapped by (insert mapper name).
 
 
