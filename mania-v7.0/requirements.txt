@@ -1,6 +1,0 @@
-librosa
-numpy
-matplotlib
-tensorflow
-gradio
-scikit_learn
